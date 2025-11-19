@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
+import { useEffect } from "react";
 import Home from "@/pages/Home";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -15,8 +16,14 @@ import { useAuthStore } from "@/stores/authStore";
 import { useTheme } from "@/hooks/useTheme";
 
 export default function App() {
-  const { user, logout } = useAuthStore()
+  const { user, logout, checkAuth } = useAuthStore()
   const { theme } = useTheme()
+
+  // Check token validity on mount
+  useEffect(() => {
+    checkAuth()
+  }, [checkAuth])
+
   return (
     <Router>
       <div className={`min-h-screen bg-gray-900 text-white ${theme === 'horror' ? 'horror' : ''}`}>

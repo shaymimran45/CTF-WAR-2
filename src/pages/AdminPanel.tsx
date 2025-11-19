@@ -220,12 +220,21 @@ export default function AdminPanel() {
                                         onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                                         className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                                     >
-                                        <option value="web">Web</option>
-                                        <option value="crypto">Crypto</option>
-                                        <option value="pwn">Pwn</option>
-                                        <option value="reverse">Reverse</option>
+                                        <option value="web">Web Exploitation</option>
+                                        <option value="crypto">Cryptography</option>
+                                        <option value="pwn">Binary Exploitation (Pwn)</option>
+                                        <option value="reverse">Reverse Engineering</option>
                                         <option value="forensics">Forensics</option>
-                                        <option value="misc">Misc</option>
+                                        <option value="stego">Steganography</option>
+                                        <option value="networking">Networking</option>
+                                        <option value="osint">OSINT</option>
+                                        <option value="ml">Machine Learning / AI</option>
+                                        <option value="blockchain">Blockchain / Smart Contracts</option>
+                                        <option value="mobile">Mobile Security</option>
+                                        <option value="hardware">Hardware / IoT</option>
+                                        <option value="cloud">Cloud Security</option>
+                                        <option value="programming">Programming / Scripting</option>
+                                        <option value="misc">Miscellaneous</option>
                                     </select>
                                 </div>
 

@@ -200,6 +200,19 @@ npx tsx api/src/scripts/createAdmin.ts
 
 ## 🆘 Quick Troubleshooting
 
+### "Invalid or expired token" Error
+**Issue:** See "Invalid or expired token" when accessing the site  
+**Solution:** Clear browser storage and refresh:
+```javascript
+// Open browser DevTools (F12) → Console, then run:
+localStorage.clear()
+sessionStorage.clear()
+location.reload()
+```
+Or simply use **Incognito/Private mode** to test with fresh storage.
+
+**Root Cause:** Old token from previous session with different JWT_SECRET.
+
 ### Network Error on Render (FIXED)
 **Issue:** "Network error. Please try again." when logging in  
 **Solution:** The API URL has been updated to use relative paths in production. Make sure you've pushed the latest changes:

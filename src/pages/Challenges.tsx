@@ -62,8 +62,17 @@ const Challenges: React.FC = () => {
       case 'reverse': return '🔍'
       case 'forensics': return '🔬'
       case 'pwn': return '💥'
-      case 'stego': return '👻'
-      default: return '📝'
+      case 'stego': return '🖼️'
+      case 'networking': return '🔌'
+      case 'osint': return '🔎'
+      case 'ml': return '🤖'
+      case 'blockchain': return '⛓️'
+      case 'mobile': return '📱'
+      case 'hardware': return '🔧'
+      case 'cloud': return '☁️'
+      case 'programming': return '💻'
+      case 'misc': return '📝'
+      default: return '🎯'
     }
   }
 
