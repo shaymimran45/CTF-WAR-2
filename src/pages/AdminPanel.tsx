@@ -3,21 +3,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Trash2, Eye, EyeOff, Edit } from 'lucide-react'
 import { toast } from 'sonner'
-import api from '@/lib/api'
-
-interface Challenge {
-    id: string
-    title: string
-    description: string
-    category: string
-    difficulty: string
-    points: number
-    flag: string
-    isVisible: boolean
-    _count: {
-        solves: number
-    }
-}
+import api, { Challenge } from '@/lib/api'
 
 export default function AdminPanel() {
     const { user } = useAuthStore()
@@ -47,8 +33,12 @@ export default function AdminPanel() {
 
     const fetchChallenges = async () => {
         try {
-            const response = await api.get('/admin/challenges')
-            setChallenges(response.data.challenges)
+            const response = await api.getAdminChallenges()
+            if (response.success && response.data) {
+                setChallenges(response.data.challenges)
+            } else {
+                toast.error(response.error || 'Failed to load challenges')
+            }
         } catch (error) {
             console.error('Error fetching challenges:', error)
             toast.error('Failed to load challenges')
@@ -62,11 +52,30 @@ export default function AdminPanel() {
 
         try {
             if (editingChallenge) {
-                await api.patch(`/admin/challenges/${editingChallenge.id}`, formData)
-                toast.success('Challenge updated successfully!')
+                const response = await api.updateChallenge(editingChallenge.id, formData)
+                if (response.success) {
+                    toast.success('Challenge updated successfully!')
+                } else {
+                    toast.error(response.error || 'Failed to update challenge')
+                    return
+                }
             } else {
-                await api.post('/admin/challenges', formData)
-                toast.success('Challenge created successfully!')
+                const form = new FormData()
+                form.append('title', formData.title)
+                form.append('description', formData.description)
+                form.append('category', formData.category)
+                form.append('difficulty', formData.difficulty)
+                form.append('points', formData.points.toString())
+                form.append('flag', formData.flag)
+                form.append('isVisible', formData.isVisible.toString())
+
+                const response = await api.createChallenge(form)
+                if (response.success) {
+                    toast.success('Challenge created successfully!')
+                } else {
+                    toast.error(response.error || 'Failed to create challenge')
+                    return
+                }
             }
 
             setFormData({
@@ -90,9 +99,13 @@ export default function AdminPanel() {
         if (!confirm('Are you sure you want to delete this challenge?')) return
 
         try {
-            await api.delete(`/admin/challenges/${id}`)
-            toast.success('Challenge deleted successfully!')
-            fetchChallenges()
+            const response = await api.deleteAdminChallenge(id)
+            if (response.success) {
+                toast.success('Challenge deleted successfully!')
+                fetchChallenges()
+            } else {
+                toast.error(response.error || 'Failed to delete challenge')
+            }
         } catch (error) {
             toast.error('Failed to delete challenge')
         }
@@ -100,9 +113,13 @@ export default function AdminPanel() {
 
     const toggleVisibility = async (challenge: Challenge) => {
         try {
-            await api.post(`/admin/challenges/${challenge.id}/toggle-visibility`)
-            toast.success(`Challenge ${!challenge.isVisible ? 'shown' : 'hidden'}`)
-            fetchChallenges()
+            const response = await api.toggleChallengeVisibility(challenge.id)
+            if (response.success) {
+                toast.success(`Challenge ${!challenge.isVisible ? 'shown' : 'hidden'}`)
+                fetchChallenges()
+            } else {
+                toast.error(response.error || 'Failed to update visibility')
+            }
         } catch (error) {
             toast.error('Failed to update visibility')
         }
@@ -338,8 +355,8 @@ export default function AdminPanel() {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                                                 <span className={`px-2 py-1 rounded text-xs ${challenge.difficulty === 'easy' ? 'bg-green-900 text-green-300' :
-                                                        challenge.difficulty === 'medium' ? 'bg-yellow-900 text-yellow-300' :
-                                                            'bg-red-900 text-red-300'
+                                                    challenge.difficulty === 'medium' ? 'bg-yellow-900 text-yellow-300' :
+                                                        'bg-red-900 text-red-300'
                                                     }`}>
                                                     {challenge.difficulty}
                                                 </span>
