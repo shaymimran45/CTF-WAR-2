@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import prisma from '../lib/prisma'
 import { AuthenticatedRequest } from '../lib/auth'
+import { uploadFileToSupabase, deleteFileFromSupabase } from '../lib/storage'
 import path from 'path'
 import fs from 'fs'
 
@@ -273,19 +274,8 @@ export const downloadFile = async (req: AuthenticatedRequest, res: Response): Pr
       return
     }
 
-    const absolutePath = path.isAbsolute(file.filePath)
-      ? file.filePath
-      : path.join(process.cwd(), file.filePath)
-
-    if (!absolutePath || !fs.existsSync(absolutePath)) {
-      res.status(404).json({ error: 'File not found on server' })
-      return
-    }
-    const stat = fs.statSync(absolutePath)
-    res.setHeader('Content-Length', stat.size)
-    res.setHeader('Content-Type', 'application/octet-stream')
-    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(file.filename)}"`)
-    fs.createReadStream(absolutePath).pipe(res)
+    // Redirect to Supabase public URL
+    res.redirect(file.filePath)
   } catch (error) {
     console.error('Download file error:', error)
     res.status(500).json({ error: 'Internal server error' })
@@ -294,11 +284,6 @@ export const downloadFile = async (req: AuthenticatedRequest, res: Response): Pr
 
 export const createChallenge = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const uploadDir = process.env.UPLOAD_DIR || 'uploads'
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true })
-    }
-
     const {
       title,
       description,
@@ -348,16 +333,22 @@ export const createChallenge = async (req: AuthenticatedRequest, res: Response):
       }
     })
 
+    // Upload files to Supabase Storage
     const files = (req as unknown as { files?: Express.Multer.File[] }).files
     if (files && files.length > 0) {
-      const records = files.map((f) => ({
-        challengeId: challenge.id,
-        filename: f.originalname,
-        filePath: path.relative(process.cwd(), f.path),
-        fileSize: f.size
-      }))
-      if (records.length > 0) {
-        await prisma.challengeFile.createMany({ data: records })
+      const uploadPromises = files.map(async (file) => {
+        const { path: filePath, publicUrl } = await uploadFileToSupabase(file, challenge.id)
+        return {
+          challengeId: challenge.id,
+          filename: file.originalname,
+          filePath: publicUrl, // Store public URL
+          fileSize: file.size
+        }
+      })
+
+      const fileRecords = await Promise.all(uploadPromises)
+      if (fileRecords.length > 0) {
+        await prisma.challengeFile.createMany({ data: fileRecords })
       }
     }
 
@@ -380,11 +371,29 @@ export const createChallenge = async (req: AuthenticatedRequest, res: Response):
 export const deleteChallenge = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params
-    const existing = await prisma.challenge.findUnique({ where: { id } })
+    const existing = await prisma.challenge.findUnique({
+      where: { id },
+      include: { files: true }
+    })
     if (!existing) {
       res.status(404).json({ error: 'Challenge not found' })
       return
     }
+
+    // Delete files from Supabase Storage
+    if (existing.files && existing.files.length > 0) {
+      await Promise.all(
+        existing.files.map(file => {
+          // Extract path from publicUrl: https://xxx.supabase.co/storage/v1/object/public/challenge-files/path
+          const match = file.filePath.match(/challenge-files\/(.+)$/)
+          if (match) {
+            return deleteFileFromSupabase(match[1])
+          }
+          return Promise.resolve()
+        })
+      )
+    }
+
     await prisma.challenge.delete({ where: { id } })
     res.json({ deleted: true })
   } catch (error) {
@@ -561,12 +570,19 @@ export const addFilesToChallenge = async (req: AuthenticatedRequest, res: Respon
       res.status(400).json({ error: 'No files uploaded' })
       return
     }
-    const records = files.map((f) => ({
-      challengeId: id,
-      filename: f.originalname,
-      filePath: path.relative(process.cwd(), f.path),
-      fileSize: f.size
-    }))
+
+    // Upload files to Supabase Storage
+    const uploadPromises = files.map(async (file) => {
+      const { path: filePath, publicUrl } = await uploadFileToSupabase(file, id)
+      return {
+        challengeId: id,
+        filename: file.originalname,
+        filePath: publicUrl,
+        fileSize: file.size
+      }
+    })
+
+    const records = await Promise.all(uploadPromises)
     await prisma.challengeFile.createMany({ data: records })
     const created = await prisma.challenge.findUnique({
       where: { id },
@@ -587,10 +603,13 @@ export const deleteChallengeFile = async (req: AuthenticatedRequest, res: Respon
       res.status(404).json({ error: 'File not found' })
       return
     }
-    const abs = path.isAbsolute(file.filePath) ? file.filePath : path.join(process.cwd(), file.filePath)
-    if (fs.existsSync(abs)) {
-      try { fs.unlinkSync(abs) } catch {}
+
+    // Delete from Supabase Storage
+    const match = file.filePath.match(/challenge-files\/(.+)$/)
+    if (match) {
+      await deleteFileFromSupabase(match[1])
     }
+
     await prisma.challengeFile.delete({ where: { id: fileId } })
     res.json({ deleted: true })
   } catch (error) {

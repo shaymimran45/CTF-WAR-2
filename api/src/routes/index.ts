@@ -4,25 +4,16 @@ import { getChallenges, getChallenge, submitFlag, getCategories, createChallenge
 import { getLeaderboard, getStatistics, createTeam, joinTeam, leaveTeam, getMyTeam, kickMember } from '../controllers/leaderboardController'
 import { authenticateToken, requireRole } from '../lib/auth'
 import multer from 'multer'
-import fs from 'fs'
 
 const router = express.Router()
 
-const uploadDir = process.env.UPLOAD_DIR || 'uploads'
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true })
-}
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, uploadDir)
-  },
-  filename: (_req, file, cb) => {
-    const timestamp = Date.now()
-    const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_')
-    cb(null, `${timestamp}-${safeName}`)
+// Use memory storage for Supabase uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB
   }
 })
-const upload = multer({ storage })
 
 // Auth routes
 router.post('/auth/register', register)
