@@ -1,4 +1,6 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL || (
+  import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:3001/api'
+)
 
 export interface ApiResponse<T> {
   success?: boolean
@@ -163,7 +165,7 @@ class ApiClient {
     const params = new URLSearchParams()
     if (category) params.append('category', category)
     if (difficulty) params.append('difficulty', difficulty)
-    
+
     return this.request(`/challenges?${params.toString()}`)
   }
 
@@ -186,7 +188,7 @@ class ApiClient {
   async getLeaderboard(type: 'individual' | 'team' = 'individual'): Promise<ApiResponse<{ leaderboard: LeaderboardEntry[] }>> {
     const params = new URLSearchParams()
     params.append('type', type)
-    
+
     return this.request(`/leaderboard?${params.toString()}`)
   }
 
