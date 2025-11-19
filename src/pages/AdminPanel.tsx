@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '@/stores/authStore'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Trash2, Eye, EyeOff, Edit, Upload, X } from 'lucide-react'
+import { Plus, Trash2, Eye, EyeOff, Edit, Upload, X, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import api, { Challenge } from '@/lib/api'
 
@@ -464,6 +464,9 @@ export default function AdminPanel() {
                                             Solves
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                            Files
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                                             Status
                                         </th>
                                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
@@ -496,6 +499,9 @@ export default function AdminPanel() {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                                                 {challenge._count.solves}
                                             </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                                {challenge.files?.length || 0}
+                                            </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm">
                                                 {challenge.isVisible ? (
                                                     <span className="text-green-400">Visible</span>
@@ -505,6 +511,13 @@ export default function AdminPanel() {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <div className="flex items-center justify-end gap-2">
+                                                    <button
+                                                        onClick={() => navigate(`/challenges/${challenge.id}`)}
+                                                        className="text-green-400 hover:text-green-300 transition-colors"
+                                                        title="View Challenge"
+                                                    >
+                                                        <ExternalLink className="w-5 h-5" />
+                                                    </button>
                                                     <button
                                                         onClick={() => toggleVisibility(challenge)}
                                                         className="text-gray-400 hover:text-white transition-colors"

@@ -262,13 +262,13 @@ const ChallengeDetail: React.FC = () => {
                 <form onSubmit={handleSubmitFlag} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Flag Format: e.g., CTF&#123;text&#125;
+                      Flag Format: WoW&#123;your_flag_here&#125;
                     </label>
                     <input
                       type="text"
                       value={flagInput}
                       onChange={(e) => setFlagInput(e.target.value)}
-                      placeholder="Enter flag here..."
+                      placeholder="WoW{enter_flag_here}"
                       className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                       disabled={submitting}
                     />
