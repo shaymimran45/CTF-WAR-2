@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: ctf-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - ctf-network
+
+networks:
+  ctf-network:
+    driver: bridge
