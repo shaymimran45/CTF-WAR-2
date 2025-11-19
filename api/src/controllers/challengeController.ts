@@ -335,9 +335,13 @@ export const createChallenge = async (req: AuthenticatedRequest, res: Response):
 
     // Upload files to Supabase Storage
     const files = (req as unknown as { files?: Express.Multer.File[] }).files
+    console.log('📎 Files received:', files ? files.length : 0)
     if (files && files.length > 0) {
+      console.log('📤 Starting file uploads for challenge:', challenge.id)
       const uploadPromises = files.map(async (file) => {
+        console.log('Processing file:', file.originalname)
         const { path: filePath, publicUrl } = await uploadFileToSupabase(file, challenge.id)
+        console.log('✅ File uploaded, public URL:', publicUrl)
         return {
           challengeId: challenge.id,
           filename: file.originalname,
@@ -347,8 +351,10 @@ export const createChallenge = async (req: AuthenticatedRequest, res: Response):
       })
 
       const fileRecords = await Promise.all(uploadPromises)
+      console.log('💾 Saving file records to database:', fileRecords.length)
       if (fileRecords.length > 0) {
         await prisma.challengeFile.createMany({ data: fileRecords })
+        console.log('✅ File records saved successfully')
       }
     }
 

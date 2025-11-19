@@ -127,6 +127,17 @@ class SupabaseAdapter {
 
   challenge = {
     findMany: async ({ where, include, orderBy }: any = {}) => {
+      const applySelect = (record: Record<string, any>, select: Record<string, any> | undefined) => {
+        if (!select) return record
+        const picked: Record<string, any> = {}
+        for (const [key, value] of Object.entries(select)) {
+          if (value && record[key] !== undefined) {
+            picked[key] = record[key]
+          }
+        }
+        return picked
+      }
+
       let query = this.supabase.from('challenges').select('*')
 
       if (where) query = query.match(toSnakeCase(where))
@@ -144,6 +155,34 @@ class SupabaseAdapter {
       if (error) throw error
 
       const challenges = data ? data.map(toCamelCase) : []
+
+      if (include?.files) {
+        for (const challenge of challenges) {
+          const { data: files } = await this.supabase
+            .from('challenge_files')
+            .select('*')
+            .eq('challenge_id', challenge.id)
+
+          const formatted = files ? files.map(toCamelCase) : []
+          challenge.files = include.files.select
+            ? formatted.map(file => applySelect(file, include.files.select))
+            : formatted
+        }
+      }
+
+      if (include?.hints) {
+        for (const challenge of challenges) {
+          const { data: hints } = await this.supabase
+            .from('hints')
+            .select('*')
+            .eq('challenge_id', challenge.id)
+
+          const formatted = hints ? hints.map(toCamelCase) : []
+          challenge.hints = include.hints.select
+            ? formatted.map(hint => applySelect(hint, include.hints.select))
+            : formatted
+        }
+      }
 
       if (include?._count?.select?.solves) {
         for (const challenge of challenges) {
