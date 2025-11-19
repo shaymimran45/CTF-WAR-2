@@ -25,7 +25,7 @@ All setup, testing, and configuration is complete. Your CTF Platform is ready to
 ### ✅ Configuration
 - Environment variables set
 - Admin credentials: **ctfadmin2024@gmail.com / CTFSecureAdmin@2024!**
-- Dynamic flag format: CTF, flag, FLAG, ctf prefixes supported
+- Dynamic flag format: WoW{} prefix supported
 - Health endpoint ready: `/api/health`
 
 ### ✅ Testing
@@ -163,7 +163,7 @@ npx tsx api/src/scripts/createAdmin.ts
 ✅ User registration & authentication  
 ✅ Challenge management (create, edit, delete)  
 ✅ File upload/download for challenges  
-✅ Flag submission with dynamic format (CTF{}, flag{}, FLAG{}, ctf{})  
+✅ Flag submission with WoW{} format  
 ✅ Points & scoring system  
 ✅ Leaderboard (individual & team)  
 ✅ Team management  

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '@/stores/authStore'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Trash2, Eye, EyeOff, Edit } from 'lucide-react'
+import { Plus, Trash2, Eye, EyeOff, Edit, Upload, X } from 'lucide-react'
 import { toast } from 'sonner'
 import api, { Challenge } from '@/lib/api'
 
@@ -12,6 +12,9 @@ export default function AdminPanel() {
     const [loading, setLoading] = useState(true)
     const [showCreateForm, setShowCreateForm] = useState(false)
     const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null)
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+    const [hints, setHints] = useState<Array<{ content: string; penalty: number }>>([])
+    const [newHint, setNewHint] = useState({ content: '', penalty: 0 })
 
     const [formData, setFormData] = useState({
         title: '',
@@ -69,8 +72,19 @@ export default function AdminPanel() {
                 form.append('flag', formData.flag)
                 form.append('isVisible', formData.isVisible.toString())
 
+                // Add files if any
+                selectedFiles.forEach((file) => {
+                    form.append('files', file)
+                })
+
                 const response = await api.createChallenge(form)
                 if (response.success) {
+                    // Add hints if any
+                    if (hints.length > 0 && response.data?.challenge?.id) {
+                        for (const hint of hints) {
+                            await api.addHint(response.data.challenge.id, hint.content, hint.penalty)
+                        }
+                    }
                     toast.success('Challenge created successfully!')
                 } else {
                     toast.error(response.error || 'Failed to create challenge')
@@ -87,6 +101,9 @@ export default function AdminPanel() {
                 flag: '',
                 isVisible: true
             })
+            setSelectedFiles([])
+            setHints([])
+            setNewHint({ content: '', penalty: 0 })
             setShowCreateForm(false)
             setEditingChallenge(null)
             fetchChallenges()
@@ -127,6 +144,9 @@ export default function AdminPanel() {
 
     const startEdit = (challenge: Challenge) => {
         setEditingChallenge(challenge)
+        setSelectedFiles([]) // Clear files when editing
+        setHints([]) // Clear hints when editing
+        setNewHint({ content: '', penalty: 0 })
         setFormData({
             title: challenge.title,
             description: challenge.description,
@@ -142,6 +162,9 @@ export default function AdminPanel() {
     const cancelForm = () => {
         setShowCreateForm(false)
         setEditingChallenge(null)
+        setSelectedFiles([])
+        setHints([])
+        setNewHint({ content: '', penalty: 0 })
         setFormData({
             title: '',
             description: '',
@@ -277,9 +300,106 @@ export default function AdminPanel() {
                                     required
                                     value={formData.flag}
                                     onChange={(e) => setFormData({ ...formData, flag: e.target.value })}
-                                    placeholder="CTF{example_flag}"
+                                    placeholder="WoW{example_flag}"
                                     className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                                 />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Challenge Files (Optional)
+                                </label>
+                                <div className="space-y-3">
+                                    <label className="flex items-center justify-center w-full px-4 py-3 bg-gray-700 text-gray-300 rounded-lg border-2 border-dashed border-gray-600 hover:border-red-500 hover:bg-gray-600 cursor-pointer transition-colors">
+                                        <Upload className="w-5 h-5 mr-2" />
+                                        <span>Click to upload files</span>
+                                        <input
+                                            type="file"
+                                            multiple
+                                            onChange={(e) => {
+                                                if (e.target.files) {
+                                                    setSelectedFiles([...selectedFiles, ...Array.from(e.target.files)])
+                                                }
+                                            }}
+                                            className="hidden"
+                                        />
+                                    </label>
+                                    {selectedFiles.length > 0 && (
+                                        <div className="space-y-2">
+                                            {selectedFiles.map((file, index) => (
+                                                <div key={index} className="flex items-center justify-between px-3 py-2 bg-gray-700 rounded-lg">
+                                                    <div className="flex items-center gap-2 text-sm text-gray-300">
+                                                        <span className="font-medium">{file.name}</span>
+                                                        <span className="text-gray-500">({(file.size / 1024).toFixed(1)} KB)</span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setSelectedFiles(selectedFiles.filter((_, i) => i !== index))}
+                                                        className="text-red-400 hover:text-red-300 transition-colors"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Hints (Optional)
+                                </label>
+                                <div className="space-y-3">
+                                    {hints.length > 0 && (
+                                        <div className="space-y-2">
+                                            {hints.map((hint, index) => (
+                                                <div key={index} className="flex items-start justify-between px-3 py-2 bg-gray-700 rounded-lg">
+                                                    <div className="flex-1">
+                                                        <p className="text-sm text-white">{hint.content}</p>
+                                                        <p className="text-xs text-gray-400 mt-1">Penalty: -{hint.penalty} points</p>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setHints(hints.filter((_, i) => i !== index))}
+                                                        className="text-red-400 hover:text-red-300 transition-colors ml-2"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={newHint.content}
+                                            onChange={(e) => setNewHint({ ...newHint, content: e.target.value })}
+                                            placeholder="Hint text..."
+                                            className="flex-1 px-3 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                                        />
+                                        <input
+                                            type="number"
+                                            value={newHint.penalty}
+                                            onChange={(e) => setNewHint({ ...newHint, penalty: parseInt(e.target.value) || 0 })}
+                                            placeholder="Penalty"
+                                            min="0"
+                                            className="w-24 px-3 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (newHint.content) {
+                                                    setHints([...hints, newHint])
+                                                    setNewHint({ content: '', penalty: 0 })
+                                                }
+                                            }}
+                                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                                        >
+                                            Add Hint
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="flex items-center gap-2">

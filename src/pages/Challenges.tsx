@@ -30,7 +30,7 @@ const Challenges: React.FC = () => {
       navigate('/login')
       return
     }
-    
+
     fetchChallenges()
     fetchCategories()
   }, [user, navigate, fetchChallenges, fetchCategories])
@@ -41,7 +41,7 @@ const Challenges: React.FC = () => {
 
   const filteredChallenges = challenges.filter(challenge => {
     const matchesSearch = challenge.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         challenge.description.toLowerCase().includes(searchTerm.toLowerCase())
+      challenge.description.toLowerCase().includes(searchTerm.toLowerCase())
     return matchesSearch
   })
 
@@ -223,11 +223,10 @@ const Challenges: React.FC = () => {
             {filteredChallenges.map(challenge => (
               <div
                 key={challenge.id}
-                className={`card-horror border rounded-lg p-6 transition-all cursor-pointer horror-glow ${
-                  challenge.solved
+                className={`card-horror border rounded-lg p-6 transition-all cursor-pointer horror-glow ${challenge.solved
                     ? 'border-green-500 shadow-lg shadow-green-500/20'
                     : 'border-gray-700'
-                }`}
+                  }`}
                 onClick={() => handleChallengeClick(challenge.id)}
               >
                 <div className="flex items-start justify-between mb-4">

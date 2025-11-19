@@ -73,7 +73,7 @@
         },
         {
           "key": "FLAG_PREFIXES",
-          "value": "CTF,flag,FLAG,ctf"
+          "value": "WoW"
         }
       ],
       "autoDeploy": true

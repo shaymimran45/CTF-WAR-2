@@ -11,7 +11,7 @@ const ChallengeDetail: React.FC = () => {
   const navigate = useNavigate()
   const { user } = useAuthStore()
   const { submitFlag } = useChallengeStore()
-  
+
   const [challenge, setChallenge] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -75,7 +75,7 @@ const ChallengeDetail: React.FC = () => {
 
   const handleUseHint = (hintId: string, penalty: number) => {
     if (usedHints.includes(parseInt(hintId))) return
-    
+
     setUsedHints([...usedHints, parseInt(hintId)])
     toast.info(`Hint unlocked! ${penalty > 0 ? `${penalty} point penalty applied.` : ''}`)
   }
@@ -319,7 +319,7 @@ const ChallengeDetail: React.FC = () => {
                   {challenge.hints.map((hint: any, index: number) => {
                     const isUsed = usedHints.includes(parseInt(hint.id))
                     const isRevealed = showHint === parseInt(hint.id)
-                    
+
                     return (
                       <div key={hint.id} className="border border-gray-600 rounded-lg">
                         <button
