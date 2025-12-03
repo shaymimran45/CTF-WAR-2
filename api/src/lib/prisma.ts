@@ -742,6 +742,93 @@ class SupabaseAdapter {
     }
   }
 
+  challengeStatistics = {
+    upsert: async ({ where, update, create }: any) => {
+      // First try to find existing record
+      const { data: existing } = await this.supabase
+        .from('challenge_statistics')
+        .select('*')
+        .eq('challenge_id', where.challengeId)
+        .single()
+
+      if (existing) {
+        // Update existing record
+        const { data: updated, error } = await this.supabase
+          .from('challenge_statistics')
+          .update(toSnakeCase(update))
+          .eq('challenge_id', where.challengeId)
+          .select()
+          .single()
+
+        if (error) throw error
+        return toCamelCase(updated)
+      } else {
+        // Create new record
+        const newRecord = { ...toSnakeCase(create), challenge_id: where.challengeId }
+        const { data: created, error } = await this.supabase
+          .from('challenge_statistics')
+          .insert(newRecord)
+          .select()
+          .single()
+
+        if (error) throw error
+        return toCamelCase(created)
+      }
+    }
+  }
+
+  firstBloodRewards = {
+    create: async ({ data }: any) => {
+      const { data: result, error } = await this.supabase
+        .from('first_blood_rewards')
+        .insert(toSnakeCase(data))
+        .select()
+        .single()
+
+      if (error) throw error
+      return toCamelCase(result)
+    }
+  }
+
+  userAchievements = {
+    create: async ({ data }: any) => {
+      const { data: result, error } = await this.supabase
+        .from('user_achievements')
+        .insert(toSnakeCase(data))
+        .select()
+        .single()
+
+      if (error) throw error
+      return toCamelCase(result)
+    }
+  }
+
+  contests = {
+    findFirst: async ({ orderBy }: any = {}) => {
+      let query = this.supabase.from('contests').select('*')
+      if (orderBy) {
+        const [[key, dir]] = Object.entries(orderBy)
+        const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`)
+        query = query.order(snakeKey, { ascending: dir === 'asc' })
+      }
+
+      const { data, error } = await query.limit(1).single()
+      if (error && error.code !== 'PGRST116') throw error
+      return data ? toCamelCase(data) : null
+    },
+
+    create: async ({ data }: any) => {
+      const { data: result, error } = await this.supabase
+        .from('contests')
+        .insert(toSnakeCase(data))
+        .select()
+        .single()
+
+      if (error) throw error
+      return toCamelCase(result)
+    }
+  }
+
   $disconnect = async () => {
     // Supabase doesn't need explicit disconnection
     return Promise.resolve()

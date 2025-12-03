@@ -57,7 +57,11 @@ const ChallengeDetail: React.FC = () => {
       const result = await submitFlag(id!, flagInput.trim())
       if (result) {
         if (result.correct) {
-          toast.success(`Correct! You earned ${result.points} points!`)
+          if (result.isFirstBlood) {
+            toast.success(`First Blood! You earned ${result.points} points (${result.basePoints} + ${result.firstBloodPoints} bonus)!`)
+          } else {
+            toast.success(`Correct! You earned ${result.points} points!`)
+          }
           setChallenge({ ...challenge, solved: true })
           setFlagInput('')
           // Refresh user data to update score
@@ -210,6 +214,12 @@ const ChallengeDetail: React.FC = () => {
                     <Trophy className="h-4 w-4" />
                     <span className="font-semibold">{challenge.points} points</span>
                   </div>
+                  {challenge.first_blood_points > 0 && (
+                    <div className="flex items-center space-x-1 text-yellow-400">
+                      <Trophy className="h-4 w-4" />
+                      <span className="font-semibold">+{challenge.first_blood_points} FB</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -295,10 +305,12 @@ const ChallengeDetail: React.FC = () => {
                   <span className="text-gray-400">Solves:</span>
                   <span className="text-white font-medium">{challenge._count?.solves || 0}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">First Blood:</span>
-                  <span className="text-yellow-400 font-medium">Available</span>
-                </div>
+                {challenge.first_blood_points > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">First Blood Bonus:</span>
+                    <span className="text-yellow-400 font-medium">+{challenge.first_blood_points} points</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-gray-400">Your Status:</span>
                   <span className={challenge.solved ? 'text-green-400 font-medium' : 'text-gray-400'}>

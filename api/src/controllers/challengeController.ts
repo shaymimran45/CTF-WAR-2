@@ -12,8 +12,9 @@ interface CreateChallengeBody {
   difficulty?: string
   points: number | string
   flag: string
-  competitionId?: string
+  contestId?: string
   isVisible?: boolean | string
+  first_blood_points?: number | string
 }
 
 interface CreateCompetitionBody {
@@ -201,6 +202,20 @@ export const submitFlag = async (req: AuthenticatedRequest, res: Response): Prom
       isCorrect = challenge.flag === flag.trim()
     }
 
+    // Check if this is the first solve for this challenge (first blood)
+    const isFirstBlood = await prisma.solve.count({
+      where: { challengeId: id }
+    }) === 0
+
+    // Calculate points - add first blood bonus if applicable
+    let pointsAwarded = isCorrect ? challenge.points : 0
+    let firstBloodPoints = 0
+    
+    if (isCorrect && isFirstBlood && challenge.first_blood_points) {
+      firstBloodPoints = challenge.first_blood_points
+      pointsAwarded += firstBloodPoints
+    }
+
     // Create submission
     const submission = await prisma.submission.create({
       data: {
@@ -208,25 +223,81 @@ export const submitFlag = async (req: AuthenticatedRequest, res: Response): Prom
         challengeId: id,
         submittedFlag: flag.trim(),
         isCorrect,
-        pointsAwarded: isCorrect ? challenge.points : 0
+        pointsAwarded
       }
     })
 
     if (isCorrect) {
       // Create solve record
-      await prisma.solve.create({
+      const solve = await prisma.solve.create({
         data: {
           userId,
           challengeId: id,
           submissionId: submission.id,
-          pointsAwarded: challenge.points
+          pointsAwarded: pointsAwarded
         }
       })
 
+      // If this is first blood, record it and award bonus points
+      if (isFirstBlood && challenge.first_blood_points > 0) {
+        // Record first blood in challenge statistics
+        await prisma.challengeStatistics.upsert({
+          where: { challengeId: id },
+          update: {
+            first_solve: new Date(),
+            first_blood_user_id: userId,
+            solve_count: { increment: 1 }
+          },
+          create: {
+            challengeId: id,
+            first_solve: new Date(),
+            first_blood_user_id: userId,
+            solve_count: 1
+          }
+        })
+
+        // Record first blood reward
+        await prisma.firstBloodRewards.create({
+          data: {
+            challengeId: id,
+            userId: userId,
+            rewardPoints: firstBloodPoints
+          }
+        })
+
+        // Award achievement for first blood
+        await prisma.userAchievements.create({
+          data: {
+            userId: userId,
+            achievementName: 'First Blood',
+            achievementDescription: `First to solve challenge: ${challenge.title}`
+          }
+        })
+      } else {
+        // Update challenge statistics for regular solve
+        await prisma.challengeStatistics.upsert({
+          where: { challengeId: id },
+          update: {
+            solve_count: { increment: 1 },
+            last_solve: new Date()
+          },
+          create: {
+            challengeId: id,
+            solve_count: 1,
+            last_solve: new Date()
+          }
+        })
+      }
+
       res.json({
         correct: true,
-        points: challenge.points,
-        message: 'Congratulations! Challenge solved!'
+        points: pointsAwarded,
+        basePoints: challenge.points,
+        firstBloodPoints: firstBloodPoints,
+        isFirstBlood: isFirstBlood,
+        message: isFirstBlood 
+          ? `Congratulations! First Blood +${firstBloodPoints} bonus points!` 
+          : 'Congratulations! Challenge solved!'
       })
     } else {
       res.json({
@@ -291,8 +362,9 @@ export const createChallenge = async (req: AuthenticatedRequest, res: Response):
       difficulty,
       points,
       flag,
-      competitionId,
-      isVisible
+      contestId,
+      isVisible,
+      first_blood_points
     } = req.body as CreateChallengeBody
 
     if (!title || !description || !category || !points || !flag) {
@@ -300,23 +372,25 @@ export const createChallenge = async (req: AuthenticatedRequest, res: Response):
       return
     }
 
-    let compId = competitionId
+    let compId = contestId
     if (!compId) {
-      const comp = await prisma.competition.findFirst({ orderBy: { startTime: 'desc' } })
-      if (!comp) {
-        const created = await prisma.competition.create({
+      // Try to get the default contest instead of competition
+      const contest = await prisma.contests.findFirst({ orderBy: { start_time: 'desc' } })
+      if (!contest) {
+        // Create a default contest if none exists
+        const created = await prisma.contests.create({
           data: {
-            name: 'Default Competition',
-            description: 'Auto-created competition',
-            startTime: new Date(),
-            endTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-            competitionType: 'individual',
-            isPublic: true
+            name: 'Default Contest',
+            description: 'Auto-created contest',
+            start_time: new Date(),
+            end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            is_public: true,
+            status: 'active'
           }
         })
         compId = created.id
       } else {
-        compId = comp.id
+        compId = contest.id
       }
     }
 
@@ -328,7 +402,8 @@ export const createChallenge = async (req: AuthenticatedRequest, res: Response):
         difficulty: difficulty || 'medium',
         points: Number(points),
         flag,
-        competitionId: compId,
+        first_blood_points: first_blood_points ? Number(first_blood_points) : 0,
+        contest_id: compId,
         isVisible: typeof isVisible !== 'undefined' ? isVisible === 'true' || isVisible === true : true
       }
     })
@@ -389,7 +464,7 @@ export const deleteChallenge = async (req: AuthenticatedRequest, res: Response):
     // Delete files from Supabase Storage
     if (existing.files && existing.files.length > 0) {
       await Promise.all(
-        existing.files.map(file => {
+        existing.files.map((file: any) => {
           // Extract path from publicUrl: https://xxx.supabase.co/storage/v1/object/public/challenge-files/path
           const match = file.filePath.match(/challenge-files\/(.+)$/)
           if (match) {

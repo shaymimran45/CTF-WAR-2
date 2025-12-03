@@ -1,109 +1,145 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || (
-  import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:3001/api'
-)
+// Simple API base URL configuration
+import { API_BASE_URL } from './config';
 
 export interface ApiResponse<T> {
-  success?: boolean
-  data?: T
-  error?: string
-  message?: string
+  success?: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
 }
 
 export interface User {
-  id: string
-  email: string
-  username: string
-  role: string
-  teamId?: string
-  createdAt: string
+  id: string;
+  email: string;
+  username: string;
+  role: string;
+  teamId?: string;
+  createdAt: string;
   _count?: {
-    solves: number
-    submissions: number
-  }
+    solves: number;
+    submissions: number;
+  };
 }
 
 export interface Challenge {
-  id: string
-  title: string
-  description: string
-  category: string
-  difficulty: string
-  points: number
-  flag: string
-  isVisible: boolean
-  solved?: boolean
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  difficulty: string;
+  points: number;
+  flag: string;
+  isVisible: boolean;
+  solved?: boolean;
   _count?: {
-    solves: number
-  }
-  files?: ChallengeFile[]
-  hints?: Hint[]
+    solves: number;
+  };
+  files?: ChallengeFile[];
+  hints?: Hint[];
 }
 
 export interface ChallengeFile {
-  id: string
-  filename: string
-  fileSize: number
-  uploadedAt: string
+  id: string;
+  filename: string;
+  fileSize: number;
+  uploadedAt: string;
 }
 
 export interface Hint {
-  id: string
-  content: string
-  penalty: number
+  id: string;
+  content: string;
+  penalty: number;
 }
 
 export interface Submission {
-  correct: boolean
-  points: number
-  message: string
+  correct: boolean;
+  points: number;
+  message: string;
+  basePoints?: number;
+  firstBloodPoints?: number;
+  isFirstBlood?: boolean;
 }
 
 export interface LeaderboardEntry {
-  id: string
-  username?: string
-  name?: string
-  score: number
-  solves: number
-  lastSolve: string | null
+  id: string;
+  username?: string;
+  name?: string;
+  score: number;
+  solves: number;
+  lastSolve: string | null;
 }
 
 export interface Statistics {
-  totalChallenges: number
-  totalSolves: number
-  totalUsers: number
-  categories: Array<{ category: string; _count: { id: number } }>
-  difficulties: Array<{ difficulty: string; _count: { id: number } }>
+  totalChallenges: number;
+  totalSolves: number;
+  totalUsers: number;
+  categories: Array<{ category: string; _count: { id: number } }>;
+  difficulties: Array<{ difficulty: string; _count: { id: number } }>;
   recentSolves: Array<{
-    id: string
-    solvedAt: string
-    pointsAwarded: number
-    user: { username: string }
-    challenge: { title: string; category: string; points: number }
-  }>
+    id: string;
+    solvedAt: string;
+    pointsAwarded: number;
+    user: { username: string };
+    challenge: { title: string; category: string; points: number };
+  }>;
 }
 
 export interface MyTeam {
-  id: string
-  name: string
-  description?: string
-  inviteCode: string
-  maxMembers: number
-  leaderId: string
-  memberships: Array<{ joinedAt: string; user: { id: string; username: string } }>
+  id: string;
+  name: string;
+  description?: string;
+  inviteCode: string;
+  maxMembers: number;
+  leaderId: string;
+  memberships: Array<{ joinedAt: string; user: { id: string; username: string } }>;
+}
+
+export interface Contest {
+  id: string;
+  name: string;
+  description: string;
+  startTime: string;
+  endTime: string;
+  registrationDeadline?: string;
+  maxParticipants: number;
+  minParticipants: number;
+  isPublic: boolean;
+  isFeatured: boolean;
+  status: string;
+  categoryId?: string;
+  category?: {
+    id: string;
+    name: string;
+    color: string;
+  };
+  _count?: {
+    participants: number;
+    challenges: number;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ContestCategory {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  createdAt: string;
 }
 
 class ApiClient {
   private getHeaders(): Record<string, string> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-    }
+    };
 
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('token');
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`
+      headers['Authorization'] = `Bearer ${token}`;
     }
 
-    return headers
+    return headers;
   }
 
   private async request<T>(
@@ -117,27 +153,27 @@ class ApiClient {
           ...this.getHeaders(),
           ...options.headers,
         },
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
         return {
           success: false,
           error: data.error || 'An error occurred',
-        }
+        };
       }
 
       return {
         success: true,
         data,
         message: data.message,
-      }
+      };
     } catch (error) {
       return {
         success: false,
         error: 'Network error. Please try again.',
-      }
+      };
     }
   }
 
@@ -146,186 +182,235 @@ class ApiClient {
     return this.request('/auth/register', {
       method: 'POST',
       body: JSON.stringify({ email, username, password }),
-    })
+    });
   }
 
   async login(email: string, password: string): Promise<ApiResponse<{ user: User; token: string }>> {
     return this.request('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
-    })
+    });
   }
 
   async getProfile(): Promise<ApiResponse<{ user: User }>> {
-    return this.request('/auth/profile')
+    return this.request('/auth/profile');
   }
 
   // Challenge endpoints
   async getChallenges(category?: string, difficulty?: string): Promise<ApiResponse<{ challenges: Challenge[] }>> {
-    const params = new URLSearchParams()
-    if (category) params.append('category', category)
-    if (difficulty) params.append('difficulty', difficulty)
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    if (difficulty) params.append('difficulty', difficulty);
 
-    return this.request(`/challenges?${params.toString()}`)
+    return this.request(`/challenges?${params.toString()}`);
   }
 
   async getChallenge(id: string): Promise<ApiResponse<Challenge>> {
-    return this.request(`/challenges/${id}`)
+    return this.request(`/challenges/${id}`);
   }
 
   async submitFlag(id: string, flag: string): Promise<ApiResponse<Submission>> {
     return this.request(`/challenges/${id}/submit`, {
       method: 'POST',
       body: JSON.stringify({ flag }),
-    })
+    });
   }
 
   async getCategories(): Promise<ApiResponse<{ categories: string[] }>> {
-    return this.request('/challenges/categories')
+    return this.request('/challenges/categories');
   }
 
   // Leaderboard endpoints
   async getLeaderboard(type: 'individual' | 'team' = 'individual'): Promise<ApiResponse<{ leaderboard: LeaderboardEntry[] }>> {
-    const params = new URLSearchParams()
-    params.append('type', type)
+    const params = new URLSearchParams();
+    params.append('type', type);
 
-    return this.request(`/leaderboard?${params.toString()}`)
+    return this.request(`/leaderboard?${params.toString()}`);
   }
 
   async getStatistics(): Promise<ApiResponse<Statistics>> {
-    return this.request('/statistics')
+    return this.request('/statistics');
   }
 
   async createChallenge(form: FormData): Promise<ApiResponse<{ challenge: Challenge }>> {
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE_URL}/admin/challenges`, {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         body: form,
-      })
-      const data = await response.json()
+      });
+      const data = await response.json();
       if (!response.ok) {
-        return { success: false, error: data.error || 'An error occurred' }
+        return { success: false, error: data.error || 'An error occurred' };
       }
-      return { success: true, data }
+      return { success: true, data };
     } catch {
-      return { success: false, error: 'Network error. Please try again.' }
+      return { success: false, error: 'Network error. Please try again.' };
     }
   }
 
   async getAdminChallenges(): Promise<ApiResponse<{ challenges: Challenge[] }>> {
-    return this.request('/admin/challenges')
+    return this.request('/admin/challenges');
   }
 
   async updateChallenge(id: string, payload: Partial<Pick<Challenge, 'title' | 'description' | 'category' | 'difficulty' | 'points' | 'flag' | 'isVisible'>>): Promise<ApiResponse<{ challenge: Challenge }>> {
     return this.request(`/admin/challenges/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(payload)
-    })
+    });
   }
 
   async toggleChallengeVisibility(id: string): Promise<ApiResponse<{ challenge: Challenge }>> {
     return this.request(`/admin/challenges/${id}/toggle-visibility`, {
       method: 'POST'
-    })
+    });
   }
 
   async deleteAdminChallenge(id: string): Promise<ApiResponse<{ deleted: boolean }>> {
-    return this.request(`/admin/challenges/${id}`, { method: 'DELETE' })
+    return this.request(`/admin/challenges/${id}`, { method: 'DELETE' });
   }
 
   async deleteAllChallenges(): Promise<ApiResponse<{ deletedCount: number }>> {
-    return this.request('/admin/challenges', { method: 'DELETE' })
+    return this.request('/admin/challenges', { method: 'DELETE' });
   }
 
   async setAllVisibility(isVisible: boolean): Promise<ApiResponse<{ updatedCount: number }>> {
     return this.request('/admin/challenges/visibility', {
       method: 'POST',
       body: JSON.stringify({ isVisible })
-    })
+    });
   }
 
   async addHint(challengeId: string, content: string, penalty = 0): Promise<ApiResponse<{ hint: { id: string } }>> {
     return this.request(`/admin/challenges/${challengeId}/hints`, {
       method: 'POST',
       body: JSON.stringify({ content, penalty })
-    })
+    });
   }
 
   async updateHint(hintId: string, payload: { content?: string; penalty?: number }): Promise<ApiResponse<{ hint: { id: string } }>> {
     return this.request(`/admin/hints/${hintId}`, {
       method: 'PATCH',
       body: JSON.stringify(payload)
-    })
+    });
   }
 
   async deleteHint(hintId: string): Promise<ApiResponse<{ deleted: boolean }>> {
-    return this.request(`/admin/hints/${hintId}`, { method: 'DELETE' })
+    return this.request(`/admin/hints/${hintId}`, { method: 'DELETE' });
   }
 
   async addFiles(challengeId: string, files: File[]): Promise<ApiResponse<{ challenge: Challenge }>> {
-    const form = new FormData()
-    files.forEach((f) => form.append('files', f, f.name))
-    const token = localStorage.getItem('token')
+    const form = new FormData();
+    files.forEach((f) => form.append('files', f, f.name));
+    const token = localStorage.getItem('token');
     const response = await fetch(`${API_BASE_URL}/admin/challenges/${challengeId}/files`, {
       method: 'POST',
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       body: form,
-    })
-    const data = await response.json()
-    if (!response.ok) return { success: false, error: data.error || 'An error occurred' }
-    return { success: true, data }
+    });
+    const data = await response.json();
+    if (!response.ok) return { success: false, error: data.error || 'An error occurred' };
+    return { success: true, data };
   }
 
   async deleteFile(fileId: string): Promise<ApiResponse<{ deleted: boolean }>> {
-    return this.request(`/admin/files/${fileId}`, { method: 'DELETE' })
+    return this.request(`/admin/files/${fileId}`, { method: 'DELETE' });
   }
 
   async createTeam(name: string, description?: string, maxMembers?: number): Promise<ApiResponse<{ team: { id: string } }>> {
     return this.request('/teams', {
       method: 'POST',
       body: JSON.stringify({ name, description, maxMembers })
-    })
+    });
   }
 
   async joinTeam(inviteCode: string): Promise<ApiResponse<{ joined: boolean }>> {
     return this.request('/teams/join', {
       method: 'POST',
       body: JSON.stringify({ inviteCode })
-    })
+    });
   }
 
   async leaveTeam(): Promise<ApiResponse<{ left: boolean }>> {
-    return this.request('/teams/leave', { method: 'POST' })
+    return this.request('/teams/leave', { method: 'POST' });
   }
 
   async getMyTeam(): Promise<ApiResponse<{ team: MyTeam | null }>> {
-    return this.request('/teams/me')
+    return this.request('/teams/me');
   }
 
   async kickMember(memberId: string): Promise<ApiResponse<{ kicked: boolean }>> {
     return this.request('/teams/kick', {
       method: 'POST',
       body: JSON.stringify({ memberId })
-    })
+    });
+  }
+
+  // Contest endpoints
+  async getContestCategories(): Promise<ApiResponse<{ categories: ContestCategory[] }>> {
+    return this.request('/admin/contest-categories');
+  }
+
+  async createContestCategory(payload: { name: string; description?: string; color?: string }): Promise<ApiResponse<{ category: ContestCategory }>> {
+    return this.request('/admin/contest-categories', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  async getContests(): Promise<ApiResponse<{ contests: Contest[] }>> {
+    return this.request('/admin/contests');
+  }
+
+  async createContest(payload: any): Promise<ApiResponse<{ contest: Contest }>> {
+    return this.request('/admin/contests', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  async updateContest(id: string, payload: any): Promise<ApiResponse<{ contest: Contest }>> {
+    return this.request(`/admin/contests/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  async deleteContest(id: string): Promise<ApiResponse<{ deleted: boolean }>> {
+    return this.request(`/admin/contests/${id}`, { method: 'DELETE' });
+  }
+
+  async getContest(id: string): Promise<ApiResponse<Contest & { challenges: Challenge[] }>> {
+    return this.request(`/admin/contests/${id}`);
+  }
+
+  async addChallengeToContest(contestId: string, challengeId: string): Promise<ApiResponse<{ added: boolean }>> {
+    return this.request(`/admin/contests/${contestId}/challenges`, {
+      method: 'POST',
+      body: JSON.stringify({ challengeId })
+    });
+  }
+
+  async removeChallengeFromContest(contestId: string, challengeId: string): Promise<ApiResponse<{ removed: boolean }>> {
+    return this.request(`/admin/contests/${contestId}/challenges/${challengeId}`, { method: 'DELETE' });
   }
 
   async createCompetition(payload: {
-    name: string
-    description?: string
-    startTime: string
-    endTime: string
-    competitionType?: string
-    isPublic?: boolean
-    challengeIds?: string[]
+    name: string;
+    description?: string;
+    startTime: string;
+    endTime: string;
+    competitionType?: string;
+    isPublic?: boolean;
+    challengeIds?: string[];
   }): Promise<ApiResponse<{ competition: { id: string } }>> {
     return this.request('/admin/competitions', {
       method: 'POST',
       body: JSON.stringify(payload)
-    })
+    });
   }
 }
 
-export const api = new ApiClient()
-export default api
+export const api = new ApiClient();
+export default api;
