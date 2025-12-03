@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "================================"
-echo "🚀 Starting CTF Platform"
+echo "🚀 Starting CTF War"
 echo "================================"
 
 # Ensure uploads directory exists

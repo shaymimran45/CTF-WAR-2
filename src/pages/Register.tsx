@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
-import { Eye, EyeOff, Terminal } from 'lucide-react'
+import { Eye, EyeOff, Shield } from 'lucide-react'
 
 export default function Register() {
   const navigate = useNavigate()
@@ -41,16 +41,15 @@ export default function Register() {
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-lg bg-red-600 horror-glow">
-            <Terminal className="h-6 w-6 text-white" />
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="flex justify-center">
+            <Shield className="h-12 w-12 text-red-600" />
           </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-white horror-title">
-            CTF Platform
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
+            Create a CTF War Account
           </h2>
-          <div className="mt-2 horror-divider"></div>
-          <p className="mt-2 text-sm text-gray-400">
-            Create your account
+          <p className="mt-2 text-center text-sm text-gray-400">
+            Join our community to participate in challenges
           </p>
         </div>
         

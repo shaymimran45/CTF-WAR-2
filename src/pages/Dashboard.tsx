@@ -169,7 +169,7 @@ const Dashboard: React.FC = () => {
             <div>
               <h1 className="text-3xl font-bold text-white flex items-center space-x-3 horror-title">
                 <Shield className="h-8 w-8 text-blue-400" />
-                <span>Performance Dashboard</span>
+                <span>CTF War Dashboard</span>
               </h1>
               <div className="mt-2 horror-divider"></div>
               <p className="text-gray-400 mt-1">

@@ -1,6 +1,6 @@
 # Supabase Setup Guide
 
-This guide will help you set up Supabase for your CTF Platform.
+This guide will help you set up Supabase for your CTF War.
 
 ## Option 1: Using Supabase Dashboard (Recommended for Quick Setup)
 
@@ -9,7 +9,7 @@ This guide will help you set up Supabase for your CTF Platform.
 1. Go to [https://supabase.com](https://supabase.com) and sign in
 2. Click "New Project"
 3. Fill in project details:
-   - Name: CTF Platform
+   - Name: CTF War
    - Database Password: (generate a strong password)
    - Region: (choose closest to your users)
 4. Click "Create new project"
