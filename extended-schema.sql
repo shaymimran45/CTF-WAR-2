@@ -1,4 +1,4 @@
--- Extended Database Schema for Enhanced CTF Platform
+-- Extended Database Schema for Enhanced CTF War
 -- This schema extends the existing schema with additional features for contests and improved scoring
 
 -- Enable UUID extension (if not already enabled)

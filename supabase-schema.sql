@@ -1,4 +1,4 @@
--- Supabase Database Schema for CTF Platform
+-- Supabase Database Schema for CTF War
 -- Run this SQL in your Supabase SQL Editor to create all necessary tables
 
 -- Enable UUID extension

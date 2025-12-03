@@ -1,4 +1,4 @@
-# CTF Platform
+# CTF War
 
 A modern Capture The Flag (CTF) platform built with React, TypeScript, Express, and Supabase.
 

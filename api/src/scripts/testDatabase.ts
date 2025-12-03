@@ -25,7 +25,7 @@ function logTest(name: string, passed: boolean, details?: string) {
 
 async function testDatabase() {
     console.log('\n=================================')
-    console.log('🧪 Testing CTF Platform Database')
+    console.log('🧪 Testing CTF War Database')
     console.log('=================================\n')
 
     // Test 1: Connection

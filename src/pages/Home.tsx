@@ -34,7 +34,7 @@ export default function Home() {
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">
               <span className="block">Welcome to</span>
               <span className="block text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-400 mt-3">
-                CTF Platform
+                CTF War
               </span>
             </h1>
             <p className="mt-6 max-w-lg mx-auto text-xl text-gray-400">
@@ -66,7 +66,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
-              Why Join Our CTF Platform?
+              Why Join Our CTF War?
             </h2>
             <p className="mt-4 max-w-2xl mx-auto text-xl text-gray-400">
               Everything you need to learn and compete in cybersecurity challenges

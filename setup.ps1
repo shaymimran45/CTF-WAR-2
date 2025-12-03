@@ -1,7 +1,7 @@
-# Quick Setup Script for CTF Platform with Supabase
+# Quick Setup Script for CTF War with Supabase
 
 Write-Host "==================================" -ForegroundColor Cyan
-Write-Host "CTF Platform - Supabase Setup" -ForegroundColor Cyan
+Write-Host "CTF War - Supabase Setup" -ForegroundColor Cyan
 Write-Host "==================================" -ForegroundColor Cyan
 Write-Host ""
 
