@@ -497,7 +497,7 @@ export default function AdminPanel() {
                                                 {challenge.points}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                                {challenge._count.solves}
+                                                {challenge._count?.solves || 0}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                                                 {challenge.files?.length || 0}

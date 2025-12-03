@@ -35,7 +35,7 @@ export const getLeaderboard = async (req: Request, res: Response): Promise<void>
         id: team.id,
         name: team.name,
         description: team.description,
-        score: team.solves.reduce((sum, solve) => sum + solve.pointsAwarded, 0),
+        score: team.solves.reduce((sum: number, solve: any) => sum + solve.pointsAwarded, 0),
         solves: team._count.solves,
         lastSolve: team.solves[0]?.solvedAt || null
       }))
@@ -77,7 +77,7 @@ export const getLeaderboard = async (req: Request, res: Response): Promise<void>
       const individualLeaderboard = userScores.map(user => ({
         id: user.id,
         username: user.username,
-        score: user.solves.reduce((sum, solve) => sum + solve.pointsAwarded, 0),
+        score: user.solves.reduce((sum: number, solve: any) => sum + solve.pointsAwarded, 0),
         solves: user._count.solves,
         lastSolve: user.solves[0]?.solvedAt || null
       }))

@@ -23,7 +23,7 @@ export default function Team() {
 
   const fetchMyTeam = async () => {
     const res = await api.getMyTeam()
-    if (res.success) setMyTeam(res.data.team)
+    if (res.success && res.data) setMyTeam(res.data.team)
   }
 
   const createTeam = async () => {
