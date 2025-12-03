@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useAuthStore } from './stores/authStore';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Challenges from './pages/Challenges';
 import ChallengeDetail from './pages/ChallengeDetail';
@@ -42,13 +43,10 @@ const App: React.FC = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           
-          {/* Protected Routes */}
-          <Route path="/" element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } />
+          {/* Home Route */}
+          <Route path="/" element={<Home />} />
           
+          {/* Protected Routes */}
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <Dashboard />
