@@ -1,0 +1,8 @@
+node_modules
+npm-debug.log
+*.md
+solution.py
+solution.sh
+.git
+.gitignore
+docker-compose.yml
