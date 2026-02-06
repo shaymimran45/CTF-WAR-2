@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  server-oc:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - FLAG=CTF{0v3rcl0ck3d_s3rv3r_g03s_brrr}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
